@@ -4,91 +4,78 @@ import { Loader } from './Loader/Loader';
 import { Modal } from './Modal/Modal';
 import { Searchbar } from './Searchbar/Searchbar';
 import axios from 'axios';
-import React, { Component } from 'react';
-export class App extends Component {
-  state = {
-    currentData: [],
-    currentPage: 1,
-    total: 0,
-    loading: false,
-    currentImg: '',
-    modalOpen: false,
-    toSearch: '',
-  };
-  componentDidUpdate(_, prevState) {
-    if (
-      prevState.currentPage !== this.state.currentPage ||
-      prevState.toSearch !== this.state.toSearch
-    ) {
-      this.getData(this.state.toSearch);
+import React, { useState, useEffect } from 'react';
+export const App = () => {
+  const [currentData, setCurrentData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [currentImg, setCurrentImg] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [toSearch, setToSearch] = useState('');
+
+  useEffect(() => {
+    if (toSearch) {
+      getData(toSearch);
     }
-  }
-  async getData(value) {
-    this.setState({ loading: true });
+  }, [currentPage, toSearch]);
+
+  async function getData(value) {
+    setLoading(true);
     try {
-      const data = await axios.get(
-        `https://pixabay.com/api/?q=cat&page=${this.state.currentPage}&key=39007131-7339e45b97efcc367872ff842&image_type=photo&orientation=horizontal&per_page=12&q=${value}`
+      const { data } = await axios.get(
+        `https://pixabay.com/api/?q=cat&page=${currentPage}&key=39007131-7339e45b97efcc367872ff842&image_type=photo&orientation=horizontal&per_page=12&q=${value}`
       );
-      this.setState({
-        total: data.data.total,
-      });
-      this.setState(prevState => ({
-        currentData: [...prevState.currentData, ...data.data.hits],
-      }));
+      setTotal(data.total);
+      setCurrentData(prev => [...prev, ...data.hits]);
     } catch (error) {
       console.error('An error occurred:', error);
     } finally {
-      this.setState({ loading: false });
+      setLoading(false);
     }
   }
-  loadMore = e => {
+
+  const loadMore = e => {
     e.preventDefault();
-    this.setState(prevState => ({ currentPage: prevState.currentPage + 1 }));
+    setCurrentPage(prev => prev + 1);
   };
 
-  onSubmit = e => {
+  const onSubmit = e => {
     e.preventDefault();
-    this.setState({ currentPage: 1 });
-    const value = e.target.elements.search.value;
-    this.setState({ toSearch: value, currentPage: 1, currentData: [] });
+    setCurrentPage(1);
+    const { value } = e.target.elements.search;
+    setToSearch(value);
+    setCurrentData([]);
     e.target.reset();
   };
-  toggleModal = largeImageURL => {
+
+  const toggleModal = largeImageURL => {
     if (largeImageURL) {
-      this.setState({ currentImg: largeImageURL });
+      setCurrentImg(largeImageURL);
     }
-    this.setState(({ modalOpen }) => ({ modalOpen: !modalOpen }));
+    setModalOpen(prev => !prev);
   };
-  render() {
-    return (
-      <div
-        style={{
-          height: '100vh',
-          fontSize: 40,
-          color: '#010101',
-        }}
-      >
-        <Searchbar onSubmit={this.onSubmit} />
-        {this.state.currentData && (
-          <ImageGallery
-            gallery={this.state.currentData}
-            toggleModal={this.toggleModal}
-          />
-        )}
 
-        {this.state.loading && <Loader />}
+  return (
+    <div>
+      <Searchbar onSubmit={onSubmit} />
+      {currentData.length > 0 && (
+        <ImageGallery gallery={currentData} toggleModal={toggleModal} />
+      )}
 
-        {this.state.currentData?.length > 0 &&
-          this.state.total / 12 > this.state.currentPage && (
-            <LoadMore loadMore={this.loadMore} />
-          )}
-        {this.state.modalOpen && (
-          <Modal
-            currentImg={this.state.currentImg}
-            toggleModal={this.toggleModal}
-          />
-        )}
-      </div>
-    );
-  }
-}
+      {loading && <Loader />}
+
+      {currentData.length > 0 && total / 12 > currentPage && (
+        <LoadMore loadMore={loadMore} />
+      )}
+
+      {modalOpen && (
+        <Modal
+          currentImg={currentImg}
+          toggleModal={toggleModal}
+          modalOpen={modalOpen}
+        />
+      )}
+    </div>
+  );
+};
