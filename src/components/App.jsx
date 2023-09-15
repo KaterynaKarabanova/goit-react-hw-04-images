@@ -1,10 +1,11 @@
+import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { LoadMore } from './LoadMore/LoadMore';
 import { Loader } from './Loader/Loader';
 import { Modal } from './Modal/Modal';
 import { Searchbar } from './Searchbar/Searchbar';
-import axios from 'axios';
-import React, { useState, useEffect } from 'react';
+
 export const App = () => {
   const [currentData, setCurrentData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -16,15 +17,15 @@ export const App = () => {
 
   useEffect(() => {
     if (toSearch) {
-      getData(toSearch);
+      getData(toSearch, currentPage); // Pass currentPage to getData
     }
-  }, [currentPage, toSearch]);
+  }, [currentPage, toSearch]); // Update dependencies
 
-  async function getData(value) {
+  async function getData(value, page) {
     setLoading(true);
     try {
       const { data } = await axios.get(
-        `https://pixabay.com/api/?q=cat&page=${currentPage}&key=39007131-7339e45b97efcc367872ff842&image_type=photo&orientation=horizontal&per_page=12&q=${value}`
+        `https://pixabay.com/api/?q=${value}&page=${page}&key=39007131-7339e45b97efcc367872ff842&image_type=photo&orientation=horizontal&per_page=12`
       );
       setTotal(data.total);
       setCurrentData(prev => [...prev, ...data.hits]);
@@ -35,8 +36,7 @@ export const App = () => {
     }
   }
 
-  const loadMore = e => {
-    e.preventDefault();
+  const loadMore = () => {
     setCurrentPage(prev => prev + 1);
   };
 
@@ -46,7 +46,7 @@ export const App = () => {
     const { value } = e.target.elements.search;
     setToSearch(value);
     setCurrentData([]);
-    e.target.reset();
+    // No need to reset the form here
   };
 
   const toggleModal = largeImageURL => {
