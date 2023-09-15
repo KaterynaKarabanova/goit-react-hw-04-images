@@ -1,18 +1,26 @@
 import PropTypes from 'prop-types';
 import { StyledModalOverlay, StyledModal } from './Modal.styled';
 import React, { useEffect } from 'react';
+
 export const Modal = ({ currentImg, toggleModal, modalOpen }) => {
-  const keyDown = e => {
-    if (e.code === 'Escape') {
-      toggleModal('');
-    }
-    if (!modalOpen) {
-      window.removeEventListener('keydown', keyDown);
-    }
-  };
   useEffect(() => {
+    const keyDown = e => {
+      if (e.code === 'Escape') {
+        toggleModal('');
+      }
+      if (!modalOpen) {
+        window.removeEventListener('keydown', keyDown);
+      }
+    };
+
     window.addEventListener('keydown', keyDown);
-  }, []);
+
+    return () => {
+      // Cleanup by removing the event listener when the component unmounts
+      window.removeEventListener('keydown', keyDown);
+    };
+  }, [modalOpen, toggleModal]);
+
   const onBackClick = e => {
     if (e.target === e.currentTarget) {
       toggleModal('');
@@ -29,6 +37,6 @@ export const Modal = ({ currentImg, toggleModal, modalOpen }) => {
 };
 
 Modal.propTypes = {
-  toggleModal: PropTypes.func,
+  toggleModal: PropTypes.func.isRequired,
   currentImg: PropTypes.string,
 };
