@@ -16,7 +16,6 @@ export const Modal = ({ currentImg, toggleModal, modalOpen }) => {
     window.addEventListener('keydown', keyDown);
 
     return () => {
-      // Cleanup by removing the event listener when the component unmounts
       window.removeEventListener('keydown', keyDown);
     };
   }, [modalOpen, toggleModal]);
@@ -39,4 +38,5 @@ export const Modal = ({ currentImg, toggleModal, modalOpen }) => {
 Modal.propTypes = {
   toggleModal: PropTypes.func.isRequired,
   currentImg: PropTypes.string,
+  modalOpen: PropTypes.bool,
 };
